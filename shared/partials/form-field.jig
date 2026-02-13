@@ -14,7 +14,7 @@
           placeholder="{{ field.placeholder || '' }}"
           {...fieldProps}
         />
-@else if(field.type === 'select')
+@elseif(field.type === 'select')
         <Select
           onValueChange={fieldProps.onChange}
           defaultValue={fieldProps.value}

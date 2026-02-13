@@ -35,7 +35,7 @@ export async function create{{ modelName }}(input: Create{{ modelName }}Input) {
     revalidatePath('/{{ name }}')
 
     return { success: true, data: {{ modelVar }} }
-@else if(features.orm === 'drizzle')
+@elseif(features.orm === 'drizzle')
     // TODO: Implement Drizzle insert
     // Example:
     // const [{{ modelVar }}] = await db.insert({{ name }}s).values(validated).returning()

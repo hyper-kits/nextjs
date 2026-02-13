@@ -37,7 +37,7 @@ export async function {{ camelCase(name) }}Action(
 @let(fieldType = parts[1] || 'text')
 @if(fieldType === 'checkbox')
     {{ fieldName }}: formData.get('{{ fieldName }}') === 'on',
-@else if(fieldType === 'number')
+@elseif(fieldType === 'number')
     {{ fieldName }}: Number(formData.get('{{ fieldName }}')),
 @else
     {{ fieldName }}: formData.get('{{ fieldName }}'),

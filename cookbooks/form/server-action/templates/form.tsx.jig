@@ -96,7 +96,7 @@ export function {{ name }}({
             aria-invalid={!!state?.fieldErrors?.{{ fieldName }}}
             aria-describedby="{{ fieldName }}-error"
           />
-@else if(fieldType === 'select')
+@elseif(fieldType === 'select')
           <Select name="{{ fieldName }}" disabled={isPending} required>
             <SelectTrigger
               aria-invalid={!!state?.fieldErrors?.{{ fieldName }}}

@@ -45,18 +45,20 @@ steps:
     packages: ["@tanstack/react-table", "lucide-react"]
     optional: true
 
-  - name: Install shadcn/ui components
+  - name: Install shadcn/ui Table
     tool: shell
-    command: |
-      if [ ! -f "components/ui/table.tsx" ]; then
-        npx shadcn@latest add table --yes
-      fi
-      if [ ! -f "components/ui/input.tsx" ]; then
-        npx shadcn@latest add input --yes
-      fi
-      if [ ! -f "components/ui/button.tsx" ]; then
-        npx shadcn@latest add button --yes
-      fi
+    command: npx shadcn@latest add table --yes
+    when: "!fileExists('components/ui/table.tsx')"
+
+  - name: Install shadcn/ui Input
+    tool: shell
+    command: npx shadcn@latest add input --yes
+    when: "!fileExists('components/ui/input.tsx')"
+
+  - name: Install shadcn/ui Button
+    tool: shell
+    command: npx shadcn@latest add button --yes
+    when: "!fileExists('components/ui/button.tsx')"
 
   - name: Generate TypeScript types
     tool: template

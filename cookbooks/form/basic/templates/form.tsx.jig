@@ -148,7 +148,7 @@ export function {{ name }}({
             aria-describedby="{{ fieldName }}-error"
 @end
           />
-@else if(fieldType === 'select')
+@elseif(fieldType === 'select')
           <Select
             value={@{{{ fieldName }}}@}
             onValueChange={set{{ pascalCase(fieldName) }}}

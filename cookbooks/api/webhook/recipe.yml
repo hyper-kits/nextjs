@@ -56,15 +56,15 @@ onSuccess: |
   Required environment variables:
   @if(provider === 'stripe')
     STRIPE_WEBHOOK_SECRET=whsec_...
-  @else if(provider === 'github')
+  @elseif(provider === 'github')
     GITHUB_WEBHOOK_SECRET=your_secret
-  @else if(provider === 'shopify')
+  @elseif(provider === 'shopify')
     SHOPIFY_WEBHOOK_SECRET=your_secret
-  @else if(provider === 'clerk')
+  @elseif(provider === 'clerk')
     CLERK_WEBHOOK_SECRET=whsec_...
-  @else if(provider === 'resend')
+  @elseif(provider === 'resend')
     RESEND_WEBHOOK_SECRET=your_secret
-  @else if(verification)
+  @elseif(verification)
     {{ name | upper }}_WEBHOOK_SECRET=your_secret
   @end
 

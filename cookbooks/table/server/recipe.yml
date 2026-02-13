@@ -37,15 +37,15 @@ steps:
     packages: ["@tanstack/react-table", "@tanstack/react-query"]
     optional: true
 
-  - name: Install shadcn/ui components
+  - name: Install shadcn/ui Table
     tool: shell
-    command: |
-      if [ ! -f "components/ui/table.tsx" ]; then
-        npx shadcn@latest add table --yes
-      fi
-      if [ ! -f "components/ui/skeleton.tsx" ]; then
-        npx shadcn@latest add skeleton --yes
-      fi
+    command: npx shadcn@latest add table --yes
+    when: "!fileExists('components/ui/table.tsx')"
+
+  - name: Install shadcn/ui Skeleton
+    tool: shell
+    command: npx shadcn@latest add skeleton --yes
+    when: "!fileExists('components/ui/skeleton.tsx')"
 
   - name: Generate types
     tool: template

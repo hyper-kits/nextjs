@@ -38,7 +38,7 @@ export async function update{{ modelName }}(id: string, input: Update{{ modelNam
     revalidatePath(`/{{ name }}/${id}`)
 
     return { success: true, data: {{ modelVar }} }
-@else if(features.orm === 'drizzle')
+@elseif(features.orm === 'drizzle')
     // TODO: Implement Drizzle update
     // Example:
     // const [{{ modelVar }}] = await db.update({{ name }}s)

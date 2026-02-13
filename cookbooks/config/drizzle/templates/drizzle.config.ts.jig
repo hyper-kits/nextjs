@@ -8,17 +8,17 @@ export default defineConfig({
   out: './drizzle',
 @if(database === 'postgresql')
   dialect: 'postgresql',
-@else if(database === 'mysql')
+@elseif(database === 'mysql')
   dialect: 'mysql',
-@else if(database === 'sqlite')
+@elseif(database === 'sqlite')
   dialect: 'sqlite',
 @end
   dbCredentials: {
 @if(database === 'postgresql')
     url: process.env.DATABASE_URL!,
-@else if(database === 'mysql')
+@elseif(database === 'mysql')
     url: process.env.DATABASE_URL!,
-@else if(database === 'sqlite')
+@elseif(database === 'sqlite')
     url: process.env.DATABASE_URL || './local.db',
 @end
   },

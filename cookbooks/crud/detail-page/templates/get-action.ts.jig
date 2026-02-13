@@ -32,7 +32,7 @@ export async function get{{ modelName }}(id: string) {
     }
 
     return {{ modelVar }}
-@else if(features.orm === 'drizzle')
+@elseif(features.orm === 'drizzle')
     // TODO: Implement Drizzle query
     // Example:
     // const [{{ modelVar }}] = await db.select().from({{ name }}s).where(eq({{ name }}s.id, id))

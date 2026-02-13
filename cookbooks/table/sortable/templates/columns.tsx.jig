@@ -43,12 +43,12 @@ export const columns: ColumnDef<{{ pascalCase(name) }}Row>[] = [
         dateStyle: 'medium'
       }).format(date) : '-'
     },
-@else if(type === 'boolean')
+@elseif(type === 'boolean')
     cell: ({ row }) => {
       const value = row.getValue('{{ key }}') as boolean
       return value ? '✓' : '✗'
     },
-@else if(type === 'number')
+@elseif(type === 'number')
     cell: ({ row }) => {
       const value = row.getValue('{{ key }}') as number
       return value.toLocaleString()

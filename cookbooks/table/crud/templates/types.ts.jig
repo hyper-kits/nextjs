@@ -8,7 +8,7 @@ export interface {{ pascalCase(name) }}Row {
 @let(key = parts[0])
 @let(type = parts[2] || 'string')
 @if(key !== 'id')
-  {{ key }}: @if(type === 'number')number@else if(type === 'boolean')boolean@else if(type === 'date')Date@else string@end
+  {{ key }}: @if(type === 'number')number@elseif(type === 'boolean')boolean@elseif(type === 'date')Date@else string@end
 
 @end
 @endeach

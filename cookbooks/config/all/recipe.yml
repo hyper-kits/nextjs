@@ -128,7 +128,7 @@ onSuccess: |
     - Update DATABASE_URL in .env with your database credentials
     - Edit prisma/schema.prisma to define your data models
     - Run 'npx prisma migrate dev --name init' to create your database
-  @else if(database === 'drizzle')
+  @elseif(database === 'drizzle')
     - Update DATABASE_URL in .env with your database credentials
     - Edit db/schema/*.ts to define your data models
     - Run 'bun run db:generate' to generate migrations

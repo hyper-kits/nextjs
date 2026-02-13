@@ -41,11 +41,8 @@ steps:
 
   - name: Install shadcn/ui Form component
     tool: shell
-    command: |
-      if [ ! -f "components/ui/form.tsx" ]; then
-        echo "Installing shadcn/ui Form component..."
-        npx shadcn@latest add form --yes
-      fi
+    command: npx shadcn@latest add form --yes
+    when: "!fileExists('components/ui/form.tsx')"
 
   - name: Generate Zod schema
     tool: template

@@ -65,16 +65,30 @@ onSuccess: |
   @end
 
 steps:
-  - name: Detect ORM
+  - name: Check for Drizzle ORM
+    tool: query
+    file: package.json
+    checks:
+      - path: dependencies.drizzle-orm
+        exportExists: hasDrizzle
+
+  - name: Check for Prisma Client
+    tool: query
+    file: package.json
+    checks:
+      - path: dependencies.@prisma/client
+        exportExists: hasPrisma
+
+  - name: Resolve ORM
     tool: shell
     command: |
-      if grep -q '"drizzle-orm"' package.json 2>/dev/null; then
+      @if(hasDrizzle)
         echo "drizzle"
-      elif grep -q '"@prisma/client"' package.json 2>/dev/null; then
+      @elseif(hasPrisma)
         echo "prisma"
-      else
+      @else
         echo "none"
-      fi
+      @end
     exports:
       detectedOrm: "{{ result.stdout.trim() }}"
 

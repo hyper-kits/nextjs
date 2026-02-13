@@ -77,24 +77,24 @@ steps:
         echo "# Database" >> .env
         @if(databaseUrl)
           echo "DATABASE_URL=\"{{ databaseUrl }}\"" >> .env
-        @else if(database === 'postgresql')
+        @elseif(database === 'postgresql')
           echo "DATABASE_URL=\"postgresql://user:password@localhost:5432/mydb\"" >> .env
-        @else if(database === 'mysql')
+        @elseif(database === 'mysql')
           echo "DATABASE_URL=\"mysql://user:password@localhost:3306/mydb\"" >> .env
-        @else if(database === 'sqlite')
+        @elseif(database === 'sqlite')
           echo "DATABASE_URL=\"file:./local.db\"" >> .env
         @end
       fi
 
-  - name: Update package.json scripts
-    tool: shell
-    command: |
-      if command -v bun &> /dev/null; then
-        npm pkg set scripts.db:generate="drizzle-kit generate"
-        npm pkg set scripts.db:migrate="drizzle-kit migrate"
-        npm pkg set scripts.db:push="drizzle-kit push"
-        npm pkg set scripts.db:studio="drizzle-kit studio"
-      fi
+  - name: Add database scripts to package.json
+    tool: patch
+    file: package.json
+    merge:
+      scripts:
+        db:generate: "drizzle-kit generate"
+        db:migrate: "drizzle-kit migrate"
+        db:push: "drizzle-kit push"
+        db:studio: "drizzle-kit studio"
 
 onSuccess: |
   Drizzle ORM initialized successfully!

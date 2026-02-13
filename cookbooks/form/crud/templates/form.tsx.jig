@@ -79,7 +79,7 @@ export function {{ model }}Form({
   const [updateState, updateAction, updatePending] = useActionState(update{{ pascalCase(model) }}, null)
   const isPending = mode === 'create' ? createPending : updatePending
   const state = mode === 'create' ? createState : updateState
-@else if(mode === 'create')
+@elseif(mode === 'create')
   const [state, formAction, isPending] = useActionState(create{{ pascalCase(model) }}, null)
 @else
   const [state, formAction, isPending] = useActionState(update{{ pascalCase(model) }}, null)
@@ -95,17 +95,17 @@ export function {{ model }}Form({
 @each(field in formFields)
 @if(orm === 'prisma')
       {{ field.name }}: @if(field.type === 'String')
-''@else if(field.type === 'Int' || field.type === 'Float')
-0@else if(field.type === 'Boolean')
-false@else if(field.type === 'DateTime')
+''@elseif(field.type === 'Int' || field.type === 'Float')
+0@elseif(field.type === 'Boolean')
+false@elseif(field.type === 'DateTime')
 new Date()@else
 ''@end
 ,
 @else
       {{ field.name }}: @if(field.type === 'text' || field.type === 'varchar')
-''@else if(field.type === 'integer' || field.type === 'int')
-0@else if(field.type === 'boolean')
-false@else if(field.type === 'timestamp' || field.type === 'date')
+''@elseif(field.type === 'integer' || field.type === 'int')
+0@elseif(field.type === 'boolean')
+false@elseif(field.type === 'timestamp' || field.type === 'date')
 new Date()@else
 ''@end
 ,
@@ -173,7 +173,7 @@ new Date()@else
                   className="resize-none"
                   {...formField}
                 />
-@else if(field.type === 'Boolean')
+@elseif(field.type === 'Boolean')
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     checked={formField.value}
@@ -183,7 +183,7 @@ new Date()@else
                     Enable {{ field.name }}
                   </span>
                 </div>
-@else if(field.type === 'DateTime')
+@elseif(field.type === 'DateTime')
                 <Input
                   type="datetime-local"
                   {...formField}
@@ -193,7 +193,7 @@ new Date()@else
                       : formField.value
                   }
                 />
-@else if(field.type === 'Int' || field.type === 'Float')
+@elseif(field.type === 'Int' || field.type === 'Float')
                 <Input
                   type="number"
                   placeholder="Enter {{ field.name }}..."
@@ -202,8 +202,8 @@ new Date()@else
 @else
                 <Input
                   type="@if(field.name.toLowerCase().includes('email'))
-email@else if(field.name.toLowerCase().includes('password'))
-password@else if(field.name.toLowerCase().includes('url'))
+email@elseif(field.name.toLowerCase().includes('password'))
+password@elseif(field.name.toLowerCase().includes('url'))
 url@else
 text@end
 "
@@ -218,7 +218,7 @@ text@end
                   className="resize-none"
                   {...formField}
                 />
-@else if(field.type === 'boolean')
+@elseif(field.type === 'boolean')
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     checked={formField.value}
@@ -228,7 +228,7 @@ text@end
                     Enable {{ field.name }}
                   </span>
                 </div>
-@else if(field.type === 'timestamp' || field.type === 'date')
+@elseif(field.type === 'timestamp' || field.type === 'date')
                 <Input
                   type="datetime-local"
                   {...formField}
@@ -238,7 +238,7 @@ text@end
                       : formField.value
                   }
                 />
-@else if(field.type === 'integer' || field.type === 'int')
+@elseif(field.type === 'integer' || field.type === 'int')
                 <Input
                   type="number"
                   placeholder="Enter {{ field.name }}..."

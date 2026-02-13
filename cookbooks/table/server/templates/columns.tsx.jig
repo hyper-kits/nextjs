@@ -35,9 +35,9 @@ export const columns: ColumnDef<{{ pascalCase(name) }}Row>[] = [
       const date = row.getValue('{{ key }}') as Date
       return date ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(date)) : '-'
     },
-@else if(type === 'boolean')
+@elseif(type === 'boolean')
     cell: ({ row }) => (row.getValue('{{ key }}') as boolean ? '✓' : '✗'),
-@else if(type === 'number')
+@elseif(type === 'number')
     cell: ({ row }) => (row.getValue('{{ key }}') as number).toLocaleString(),
 @end
   },

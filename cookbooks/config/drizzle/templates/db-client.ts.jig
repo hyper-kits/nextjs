@@ -10,10 +10,10 @@ to: "db/index.ts"
 @if(database === 'postgresql')
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
-@else if(database === 'mysql')
+@elseif(database === 'mysql')
 import { drizzle } from 'drizzle-orm/mysql2'
 import mysql from 'mysql2/promise'
-@else if(database === 'sqlite')
+@elseif(database === 'sqlite')
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import Database from 'better-sqlite3'
 @end
@@ -28,14 +28,14 @@ if (!process.env.DATABASE_URL) {
 const queryClient = postgres(process.env.DATABASE_URL)
 export const db = drizzle(queryClient, { schema })
 
-@else if(database === 'mysql')
+@elseif(database === 'mysql')
 // MySQL client
 const poolConnection = mysql.createPool({
   uri: process.env.DATABASE_URL,
 })
 export const db = drizzle(poolConnection, { schema, mode: 'default' })
 
-@else if(database === 'sqlite')
+@elseif(database === 'sqlite')
 // SQLite client
 const sqlite = new Database(process.env.DATABASE_URL)
 export const db = drizzle(sqlite, { schema })

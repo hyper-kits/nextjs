@@ -70,7 +70,7 @@ export async function get{{ pluralize(modelName) }}(params?: {
       pageSize,
       totalPages: Math.ceil(total / pageSize),
     }
-@else if(features.orm === 'drizzle')
+@elseif(features.orm === 'drizzle')
     // TODO: Implement Drizzle query
     // Example:
     // const items = await db.select().from({{ pluralName }}).limit(pageSize).offset(skip)

@@ -165,7 +165,7 @@ export function {{ modelName }}Form({ initialData, id }: {{ modelName }}FormProp
     defaultValues: initialData || {
 @if(modelFields.length > 0)
 @each(field in modelFields)
-      {{ field.name }}: @if(field.type === 'boolean')false@else if(field.type === 'number' || field.type === 'int' || field.type === 'float')0@else if(field.type === 'date' || field.type === 'datetime')new Date()@else''@end,
+      {{ field.name }}: @if(field.type === 'boolean')false@elseif(field.type === 'number' || field.type === 'int' || field.type === 'float')0@elseif(field.type === 'date' || field.type === 'datetime')new Date()@else''@end,
 @end
 @else
       // TODO: Add default values for your fields

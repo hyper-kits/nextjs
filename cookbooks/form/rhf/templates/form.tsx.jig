@@ -121,7 +121,7 @@ export function {{ name }}({
                   className="resize-none"
                   {...field}
                 />
-@else if(fieldType === 'select')
+@elseif(fieldType === 'select')
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select an option" />

@@ -29,31 +29,15 @@ variables:
     default: true
 
 steps:
-  - name: Check for existing shadcn/ui installation
-    tool: shell
-    command: |
-      if [ -f "components.json" ]; then
-        echo "Warning: components.json already exists"
-        echo "This may overwrite your existing shadcn/ui configuration"
-        read -p "Continue? (y/n) " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-          exit 1
-        fi
-      fi
-
   - name: Initialize shadcn/ui
+    when: "!fileExists('components.json')"
     tool: shell
     command: |
       npx shadcn@latest init \
         --yes \
-        --defaults=false \
-        --style {{ style }} \
+        --force \
         --base-color {{ baseColor }} \
-        --primitives {{ primitives }} \
-        @if(cssVariables)
-      --css-variables@else
-      --no-css-variables@end
+        {{ cssVariables ? '--css-variables' : '--no-css-variables' }}
 
 
   - name: Install essential components

@@ -9,7 +9,7 @@
       errors: parsed.error.flatten().fieldErrors
     }
   }
-@else if(errorType === 'api')
+@elseif(errorType === 'api')
   try {
     // TODO: Implement API logic
   } catch (error) {
@@ -19,7 +19,7 @@
       { status: 500 }
     )
   }
-@else if(errorType === 'server-action')
+@elseif(errorType === 'server-action')
   try {
     // TODO: Implement server action logic
   } catch (error) {

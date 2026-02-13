@@ -33,7 +33,7 @@ export async function delete{{ modelName }}(id: string) {
     revalidatePath('/{{ name }}')
 
     return { success: true }
-@else if(features.orm === 'drizzle')
+@elseif(features.orm === 'drizzle')
     // TODO: Implement Drizzle delete
     // Example:
     // await db.delete({{ name }}s).where(eq({{ name }}s.id, id))

@@ -50,13 +50,13 @@ steps:
         echo "# Database" >> .env
         @if(databaseUrl)
           echo "DATABASE_URL=\"{{ databaseUrl }}\"" >> .env
-        @else if(database === 'postgresql')
+        @elseif(database === 'postgresql')
           echo "DATABASE_URL=\"postgresql://user:password@localhost:5432/mydb\"" >> .env
-        @else if(database === 'mysql')
+        @elseif(database === 'mysql')
           echo "DATABASE_URL=\"mysql://user:password@localhost:3306/mydb\"" >> .env
-        @else if(database === 'sqlite')
+        @elseif(database === 'sqlite')
           echo "DATABASE_URL=\"file:./dev.db\"" >> .env
-        @else if(database === 'mongodb')
+        @elseif(database === 'mongodb')
           echo "DATABASE_URL=\"mongodb://localhost:27017/mydb\"" >> .env
         @end
       fi

@@ -10,9 +10,9 @@ to: "db/schema/index.ts"
 
 @if(database === 'postgresql')
 import { pgTable, text, timestamp, boolean } from 'drizzle-orm/pg-core'
-@else if(database === 'mysql')
+@elseif(database === 'mysql')
 import { mysqlTable, text, timestamp, boolean } from 'drizzle-orm/mysql-core'
-@else if(database === 'sqlite')
+@elseif(database === 'sqlite')
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
 @end
 import { relations } from 'drizzle-orm'
@@ -40,7 +40,7 @@ export const posts = pgTable('posts', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
-@else if(database === 'mysql')
+@elseif(database === 'mysql')
 export const users = mysqlTable('users', {
   id: text('id').$defaultFn(() => createId()).primaryKey(),
   email: text('email').notNull().unique(),
@@ -59,7 +59,7 @@ export const posts = mysqlTable('posts', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
-@else if(database === 'sqlite')
+@elseif(database === 'sqlite')
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   email: text('email').notNull().unique(),

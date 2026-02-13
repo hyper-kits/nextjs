@@ -51,30 +51,28 @@ steps:
   - name: Detect ORM
     tool: shell
     command: |
-      # Detect which ORM is being used
       if [ -f "prisma/schema.prisma" ]; then
-        echo "DETECTED_ORM=prisma" > .hypergen-temp
+        echo "prisma"
       elif [ -d "db/schema" ] || [ -f "db/schema.ts" ]; then
-        echo "DETECTED_ORM=drizzle" > .hypergen-temp
+        echo "drizzle"
       else
         echo "Error: No ORM detected. Please set up Prisma or Drizzle first."
-        echo "Run: hypergen nextjs database prisma-init"
-        echo "Or:  hypergen nextjs database drizzle-init"
+        echo "Run: hypergen nextjs config prisma"
+        echo "Or:  hypergen nextjs config drizzle"
         exit 1
       fi
+    exports:
+      detectedOrm: "{{ result.stdout.trim() }}"
 
   - name: Install Zod
     tool: install
     packages: [zod]
     optional: true
 
-  - name: Check shadcn/ui Form component
+  - name: Install shadcn/ui Form component
     tool: shell
-    command: |
-      if [ ! -f "components/ui/form.tsx" ]; then
-        echo "Installing shadcn/ui Form component..."
-        npx shadcn@latest add form --yes
-      fi
+    command: npx shadcn@latest add form --yes
+    when: "!fileExists('components/ui/form.tsx')"
 
   - name: Generate schema
     tool: template
@@ -95,10 +93,6 @@ steps:
     template: templates/update-action.ts.jig
     condition: "{{ mode === 'edit' || mode === 'both' }}"
 @end
-
-  - name: Cleanup
-    tool: shell
-    command: rm -f .hypergen-temp
 
 onSuccess: |
   CRUD form generated successfully!

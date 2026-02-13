@@ -1,79 +1,53 @@
 ---
 to: lib/schemas/{{ name }}-schema.ts
 ---
-@{
-  const helpers = require('../../../helpers')
-  const { pascalCase, camelCase } = helpers
-
-  const modelName = model || pascalCase(name)
-  const features = helpers.detectProjectFeatures()
-
-  // Parse schema from ORM or use provided fields
-  let modelFields = []
-
-  if (!fields && features.orm === 'prisma') {
-    const models = helpers.parsePrismaSchema()
-    const foundModel = models.find(m => m.name === modelName)
-    if (foundModel) {
-      modelFields = foundModel.fields.filter(f => !f.isId && !f.isCreatedAt && !f.isUpdatedAt)
-    }
-  } else if (!fields && features.orm === 'drizzle') {
-    // Parse Drizzle schema
-    const models = helpers.parseDrizzleSchema()
-    const foundModel = models.find(m => m.name === modelName)
-    if (foundModel) {
-      modelFields = foundModel.fields.filter(f => !f.isId && !f.isTimestamp)
-    }
-  } else if (fields) {
-    // Parse provided fields
-    modelFields = fields.split(',').map(f => {
-      const [name, type] = f.trim().split(':')
-      return { name, type: type || 'string', isRequired: true }
-    })
-  }
-
-  // Helper to convert field type to Zod schema
-  function getZodType(field) {
-    const typeMap = {
-      'string': 'z.string()',
-      'text': 'z.string()',
-      'number': 'z.number()',
-      'int': 'z.number().int()',
-      'float': 'z.number()',
-      'boolean': 'z.boolean()',
-      'date': 'z.date()',
-      'datetime': 'z.date()',
-      'email': 'z.string().email()',
-      'url': 'z.string().url()',
-      'json': 'z.any()',
-    }
-
-    let zodType = typeMap[field.type?.toLowerCase()] || 'z.string()'
-
-    if (!field.isRequired) {
-      zodType += '.optional()'
-    }
-
-    return zodType
-  }
-}
+@let(modelName = model || pascalCase(name))
+@let(features = typeof detectProjectFeatures === 'function' ? detectProjectFeatures() : { orm: 'none' })
+@let(modelFields = typeof parseFieldsString === 'function' && fields ? parseFieldsString(fields) : [])
+@let(fieldDescriptions = typeof buildFieldDescriptions === 'function' ? buildFieldDescriptions(modelFields) : '')
 import { z } from 'zod'
+
+@ai({ key: 'zodSchema' })
+  @context()
+Model name: {{ modelName }}
+ORM: {{ features.orm || 'none' }}
+Fields:
+{{ fieldDescriptions }}
+  @end
+  @prompt()
+Generate a Zod validation schema for the {{ modelName }} model. For each field:
+- Use z.string().min(1, "X is required") for required string fields
+- Use z.string().email() for fields named "email"
+- Use z.string().url() for fields ending in "url" or "website"
+- Use z.number().int().positive() for integer IDs
+- Use z.number() for numeric fields
+- Use z.boolean().default(false) for boolean fields
+- Use z.coerce.date() for date/datetime fields
+- Use z.string() for text fields (long content)
+- Use z.enum([...]) for fields named "status" or "role" with reasonable defaults
+Output ONLY the z.object({...}) call with all fields — no imports, no variable declaration.
+  @end
+  @output({ typeHint: 'typescript-code' })
+A Zod z.object() schema with proper validation for each field.
+  @end
+  @example()
+z.object({
+  name: z.string().min(1, "Name is required").max(255),
+  email: z.string().email("Invalid email address"),
+  isActive: z.boolean().default(true),
+})
+  @end
+@end
 
 /**
  * Zod schema for {{ modelName }} validation
- * Auto-generated from @if(features.orm !== 'none'){{ features.orm }} schema@else manual field definition@end
  */
-export const {{ camelCase(modelName) }}Schema = z.object({
-@each(field in modelFields)
-  {{ field.name }}: {{ getZodType(field) }},@if(field.documentation) // {{ field.documentation }}@end
-@end
-})
+export const {{ camelCase(modelName) }}Schema = {{ zodSchema }}
 
 export type {{ modelName }} = z.infer<typeof {{ camelCase(modelName) }}Schema>
 
 /**
  * Schema for creating a new {{ modelName }}
- * Same as base schema but can be extended with different rules
  */
 export const create{{ modelName }}Schema = {{ camelCase(modelName) }}Schema
 

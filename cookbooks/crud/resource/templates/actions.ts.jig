@@ -1,32 +1,23 @@
 ---
 to: app/actions/{{ name }}.ts
 ---
-@{
-  const helpers = require('../../../helpers')
-  const { pascalCase, camelCase, pluralize } = helpers
-
-  const modelName = model || pascalCase(name)
-  const modelVar = camelCase(modelName)
-  const pluralName = pluralize(name)
-  const features = helpers.detectProjectFeatures()
-
-  // Determine database client
-  let dbImport = ''
-  let dbClient = 'db'
-
-  if (features.orm === 'prisma') {
-    dbImport = "import { prisma } from '@/lib/prisma'"
-    dbClient = 'prisma'
-  } else if (features.orm === 'drizzle') {
-    dbImport = "import { db } from '@/lib/db'"
-    dbClient = 'db'
-  }
-}
+@let(modelName = model || pascalCase(name))
+@let(modelVar = camelCase(model || pascalCase(name)))
+@let(pluralName = pluralize(name))
+@let(features = typeof detectProjectFeatures === 'function' ? detectProjectFeatures() : { orm: 'none' })
+@let(modelFields = typeof parseFieldsString === 'function' && fields ? parseFieldsString(fields) : [])
+@let(fieldDescriptions = typeof buildFieldDescriptionsInline === 'function' ? buildFieldDescriptionsInline(modelFields) : '')
+@let(dbImport = features.orm === 'prisma' ? "import { prisma } from '@/lib/prisma'" : features.orm === 'drizzle' ? "import { db } from '@/lib/db'" : '')
+@let(dbClient = features.orm === 'prisma' ? 'prisma' : 'db')
 'use server'
 
 import { revalidatePath } from 'next/cache'
 @if(dbImport)
 {{ dbImport }}
+@end
+@if(features.orm === 'drizzle')
+import { eq, sql, like, or, desc, asc } from 'drizzle-orm'
+import { {{ pluralName }} } from '@/db/schema/{{ name }}'
 @end
 import {
   create{{ modelName }}Schema,
@@ -34,6 +25,93 @@ import {
   type Create{{ modelName }}Input,
   type Update{{ modelName }}Input,
 } from '@/lib/schemas/{{ name }}-schema'
+
+@if(features.orm === 'drizzle')
+@ai({ key: 'drizzleListQuery' })
+  @context()
+Model: {{ modelName }}
+Table variable: {{ pluralName }}
+DB client: db
+Fields: {{ fieldDescriptions }}
+ORM: Drizzle with drizzle-orm
+Available imports: eq, sql, like, or, desc, asc from 'drizzle-orm'
+  @end
+  @prompt()
+Generate the body of a list function for the {{ modelName }} model using Drizzle ORM.
+The function receives: page (number), pageSize (number), sortBy (string), sortOrder ('asc'|'desc'), search (string|undefined), skip (number).
+It should:
+1. Build a search condition using `like` on string fields if search is provided
+2. Query items with .select().from({{ pluralName }}) with limit, offset, orderBy
+3. Query total count
+4. Return { items, total, page, pageSize, totalPages: Math.ceil(total / pageSize) }
+Output ONLY the function body (no function declaration). Use the `db` client.
+  @end
+  @output({ typeHint: 'typescript-code' })
+The function body for listing {{ pluralName }} with Drizzle, including search, pagination, and sorting.
+  @end
+  @example()
+    const searchCondition = search
+      ? or(
+          like({{ pluralName }}.name, `%${search}%`),
+        )
+      : undefined
+
+    const items = await db
+      .select()
+      .from({{ pluralName }})
+      .where(searchCondition)
+      .limit(pageSize)
+      .offset(skip)
+      .orderBy(sortOrder === 'desc' ? desc({{ pluralName }}.createdAt) : asc({{ pluralName }}.createdAt))
+
+    const [{ count: total }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from({{ pluralName }})
+      .where(searchCondition)
+
+    return {
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    }
+  @end
+@end
+
+@ai({ key: 'drizzleMutations' })
+  @context()
+Model: {{ modelName }}
+Table variable: {{ pluralName }}
+DB client: db
+Fields: {{ fieldDescriptions }}
+ORM: Drizzle with drizzle-orm
+Available imports: eq from 'drizzle-orm'
+Schema types: Create{{ modelName }}Input, Update{{ modelName }}Input
+  @end
+  @prompt()
+Generate three Drizzle ORM function bodies for {{ modelName }}:
+
+1. GET_BY_ID: Query a single {{ modelName }} by id. Throw "{{ modelName }} not found" if not found. Return the record.
+2. CREATE: Insert validated data into {{ pluralName }}. Return the created record using .returning().
+3. UPDATE: Update by id with validated data. Return the updated record using .returning().
+4. DELETE: Delete by id. Return { success: true }.
+
+Format as a JSON object with keys: getById, create, update, delete — each containing ONLY the function body code (no function declarations).
+  @end
+  @output({ typeHint: 'json' })
+A JSON object with getById, create, update, delete keys, each containing TypeScript function body code.
+  @end
+  @example()
+{
+  "getById": "const [record] = await db.select().from({{ pluralName }}).where(eq({{ pluralName }}.id, id))\n    if (!record) {\n      throw new Error('{{ modelName }} not found')\n    }\n    return record",
+  "create": "const [record] = await db.insert({{ pluralName }}).values(validated).returning()\n    revalidatePath('/{{ name }}')\n    return record",
+  "update": "const [record] = await db.update({{ pluralName }}).set(validated).where(eq({{ pluralName }}.id, id)).returning()\n    revalidatePath('/{{ name }}')\n    revalidatePath(`/{{ name }}/${id}`)\n    return record",
+  "delete": "await db.delete({{ pluralName }}).where(eq({{ pluralName }}.id, id))\n    revalidatePath('/{{ name }}')\n    return { success: true }"
+}
+  @end
+@end
+@end
 
 /**
  * Get all {{ pluralName }} with optional filtering and pagination
@@ -50,12 +128,10 @@ export async function get{{ pluralize(modelName) }}(params?: {
     const skip = (page - 1) * pageSize
 
 @if(features.orm === 'prisma')
-    // Build where clause for search
     const where = search
       ? {
           OR: [
             // Add searchable fields here
-            // Example: { title: { contains: search, mode: 'insensitive' } },
           ],
         }
       : {}
@@ -77,21 +153,9 @@ export async function get{{ pluralize(modelName) }}(params?: {
       pageSize,
       totalPages: Math.ceil(total / pageSize),
     }
-@else if(features.orm === 'drizzle')
-    // TODO: Implement Drizzle query
-    // Example:
-    // const items = await db.select().from({{ pluralName }}).limit(pageSize).offset(skip)
-    // const [{ count }] = await db.select({ count: sql<number>`count(*)` }).from({{ pluralName }})
-
-    return {
-      items: [],
-      total: 0,
-      page,
-      pageSize,
-      totalPages: 0,
-    }
+@elseif(features.orm === 'drizzle')
+{{ drizzleListQuery }}
 @else
-    // TODO: Implement database query
     throw new Error('Database not configured')
 @end
   } catch (error) {
@@ -115,12 +179,9 @@ export async function get{{ modelName }}(id: string) {
     }
 
     return {{ modelVar }}
-@else if(features.orm === 'drizzle')
-    // TODO: Implement Drizzle query
-    // const [{{ modelVar }}] = await db.select().from({{ pluralName }}).where(eq({{ pluralName }}.id, id))
-    throw new Error('Not implemented')
+@elseif(features.orm === 'drizzle')
+    {{ JSON.parse(drizzleMutations).getById }}
 @else
-    // TODO: Implement database query
     throw new Error('Database not configured')
 @end
   } catch (error) {
@@ -134,7 +195,6 @@ export async function get{{ modelName }}(id: string) {
  */
 export async function create{{ modelName }}(data: Create{{ modelName }}Input) {
   try {
-    // Validate input
     const validated = create{{ modelName }}Schema.parse(data)
 
 @if(features.orm === 'prisma')
@@ -144,13 +204,9 @@ export async function create{{ modelName }}(data: Create{{ modelName }}Input) {
 
     revalidatePath('/{{ name }}')
     return {{ modelVar }}
-@else if(features.orm === 'drizzle')
-    // TODO: Implement Drizzle insert
-    // const [{{ modelVar }}] = await db.insert({{ pluralName }}).values(validated).returning()
-    revalidatePath('/{{ name }}')
-    throw new Error('Not implemented')
+@elseif(features.orm === 'drizzle')
+    {{ JSON.parse(drizzleMutations).create }}
 @else
-    // TODO: Implement database insert
     throw new Error('Database not configured')
 @end
   } catch (error) {
@@ -164,7 +220,6 @@ export async function create{{ modelName }}(data: Create{{ modelName }}Input) {
  */
 export async function update{{ modelName }}(id: string, data: Update{{ modelName }}Input) {
   try {
-    // Validate input
     const validated = update{{ modelName }}Schema.parse(data)
 
 @if(features.orm === 'prisma')
@@ -176,14 +231,9 @@ export async function update{{ modelName }}(id: string, data: Update{{ modelName
     revalidatePath('/{{ name }}')
     revalidatePath(`/{{ name }}/${id}`)
     return {{ modelVar }}
-@else if(features.orm === 'drizzle')
-    // TODO: Implement Drizzle update
-    // const [{{ modelVar }}] = await db.update({{ pluralName }}).set(validated).where(eq({{ pluralName }}.id, id)).returning()
-    revalidatePath('/{{ name }}')
-    revalidatePath(`/{{ name }}/${id}`)
-    throw new Error('Not implemented')
+@elseif(features.orm === 'drizzle')
+    {{ JSON.parse(drizzleMutations).update }}
 @else
-    // TODO: Implement database update
     throw new Error('Database not configured')
 @end
   } catch (error) {
@@ -204,13 +254,9 @@ export async function delete{{ modelName }}(id: string) {
 
     revalidatePath('/{{ name }}')
     return { success: true }
-@else if(features.orm === 'drizzle')
-    // TODO: Implement Drizzle delete
-    // await db.delete({{ pluralName }}).where(eq({{ pluralName }}.id, id))
-    revalidatePath('/{{ name }}')
-    throw new Error('Not implemented')
+@elseif(features.orm === 'drizzle')
+    {{ JSON.parse(drizzleMutations).delete }}
 @else
-    // TODO: Implement database delete
     throw new Error('Database not configured')
 @end
   } catch (error) {

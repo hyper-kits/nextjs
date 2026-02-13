@@ -37,6 +37,10 @@ keywords:
   - zod
   - data-tables
 
+ai:
+  mode: auto
+  commandMode: batched
+
 defaults:
   cookbook: "forms"
   recipe: "add-rhf"

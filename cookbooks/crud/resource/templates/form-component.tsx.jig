@@ -1,130 +1,11 @@
 ---
 to: components/{{ model || pascalCase(name) }}Form.tsx
 ---
-@{
-  const helpers = require('../../../helpers')
-  const { pascalCase, camelCase, titleCase } = helpers
-
-  const modelName = model || pascalCase(name)
-  const modelVar = camelCase(modelName)
-  const features = helpers.detectProjectFeatures()
-
-  // Parse schema to get fields
-  let modelFields = []
-  if (!fields && features.orm === 'prisma') {
-    const models = helpers.parsePrismaSchema()
-    const foundModel = models.find(m => m.name === modelName)
-    if (foundModel) {
-      modelFields = foundModel.fields.filter(f => !f.isId && !f.isCreatedAt && !f.isUpdatedAt)
-    }
-  } else if (fields) {
-    modelFields = fields.split(',').map(f => {
-      const [name, type] = f.trim().split(':')
-      return { name, type: type || 'string', isRequired: true }
-    })
-  }
-
-  // Helper to get form field component
-  function getFormField(field) {
-    const fieldName = field.name
-    const fieldLabel = titleCase(fieldName)
-    const isRequired = field.isRequired
-
-    switch (field.type?.toLowerCase()) {
-      case 'boolean':
-        return `
-              <FormField
-                control={form.control}
-                name="${fieldName}"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">${fieldLabel}</FormLabel>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />`
-      case 'text':
-        return `
-              <FormField
-                control={form.control}
-                name="${fieldName}"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>${fieldLabel}${isRequired ? ' *' : ''}</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />`
-      case 'number':
-      case 'int':
-      case 'float':
-        return `
-              <FormField
-                control={form.control}
-                name="${fieldName}"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>${fieldLabel}${isRequired ? ' *' : ''}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />`
-      case 'date':
-      case 'datetime':
-        return `
-              <FormField
-                control={form.control}
-                name="${fieldName}"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>${fieldLabel}${isRequired ? ' *' : ''}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="datetime-local"
-                        {...field}
-                        value={field.value instanceof Date ? field.value.toISOString().slice(0, 16) : field.value}
-                        onChange={(e) => field.onChange(new Date(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />`
-      default:
-        return `
-              <FormField
-                control={form.control}
-                name="${fieldName}"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>${fieldLabel}${isRequired ? ' *' : ''}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />`
-    }
-  }
-}
+@let(modelName = model || pascalCase(name))
+@let(modelVar = camelCase(model || pascalCase(name)))
+@let(features = typeof detectProjectFeatures === 'function' ? detectProjectFeatures() : { orm: 'none' })
+@let(modelFields = typeof parseFieldsString === 'function' && fields ? parseFieldsString(fields) : [])
+@let(fieldDescriptions = typeof buildFieldDescriptions === 'function' ? buildFieldDescriptions(modelFields) : '')
 'use client'
 
 import { useRouter } from 'next/navigation'
@@ -147,6 +28,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useState } from 'react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -165,10 +47,10 @@ export function {{ modelName }}Form({ initialData, id }: {{ modelName }}FormProp
     defaultValues: initialData || {
 @if(modelFields.length > 0)
 @each(field in modelFields)
-      {{ field.name }}: @if(field.type === 'boolean')false@else if(field.type === 'number' || field.type === 'int' || field.type === 'float')0@else if(field.type === 'date' || field.type === 'datetime')new Date()@else''@end,
+      {{ field.name }}: @if(field.type === 'boolean')false@elseif(field.type === 'number' || field.type === 'int' || field.type === 'float')0@elseif(field.type === 'date' || field.type === 'datetime')new Date()@else''@end,
 @end
 @else
-      // TODO: Add default values for your fields
+      // Add default values for your fields
 @end
     },
   })
@@ -208,12 +90,32 @@ export function {{ modelName }}Form({ initialData, id }: {{ modelName }}FormProp
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
-@if(modelFields.length > 0)
-@each(field in modelFields)
-{{ getFormField(field) }}
-@end
-@else
-          {/* TODO: Add form fields for your model */}
+@ai({ key: 'formFields' })
+  @context()
+Model: {{ modelName }}
+Fields:
+{{ fieldDescriptions }}
+UI Library: shadcn/ui (React Hook Form integration)
+Available components: FormField, FormItem, FormLabel, FormControl, FormMessage, Input, Textarea, Switch, Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+  @end
+  @prompt()
+Generate JSX form fields for the {{ modelName }} form using shadcn/ui components.
+For each field, use the appropriate component:
+- string → Input
+- text → Textarea
+- boolean → Switch (with flex layout)
+- number/int/float → Input type="number" with onChange converting to Number
+- date/datetime → Input type="datetime-local" with Date conversion
+- email → Input type="email"
+- Fields named "role" or "status" → Select with reasonable options
+Each field should use the FormField/FormItem/FormLabel/FormControl/FormMessage pattern.
+Required fields should show " *" after the label.
+Output ONLY the JSX fragment — no wrapper divs, no imports.
+  @end
+  @output({ typeHint: 'jsx-fragment' })
+JSX form fields using shadcn/ui FormField components, one per model field.
+  @end
+  @example()
           <FormField
             control={form.control}
             name="name"
@@ -221,13 +123,42 @@ export function {{ modelName }}Form({ initialData, id }: {{ modelName }}FormProp
               <FormItem>
                 <FormLabel>Name *</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input placeholder="Enter name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email *</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="Enter email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="isActive"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Is Active</FormLabel>
+                </div>
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+  @end
 @end
+{{ formFields }}
         </div>
 
         <div className="flex gap-4">

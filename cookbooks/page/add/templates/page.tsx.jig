@@ -4,14 +4,100 @@ to: "app/{{ pagePath }}/page.tsx"
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "{{ capitalize(pagePath.split('/').pop().replace('[', '').replace(']', '')) }}",
+  title: "{{ pageDescription }}",
   description: "{{ pageDescription }}",
 };
 
-@if(pagePath.includes("["))
+@ai({ key: 'pageContent' })
+  @context()
+Page route: /{{ pagePath }}
+Description: {{ pageDescription }}
+This is a Next.js App Router Server Component page.
+UI Library: shadcn/ui with Tailwind CSS
+Available shadcn/ui components: Card, CardContent, CardHeader, CardTitle, CardDescription, Button, Badge, Table, TableHeader, TableRow, TableHead, TableBody, TableCell, Tabs, TabsContent, TabsList, TabsTrigger, Separator, Input, Label
+  @end
+  @prompt()
+Generate the page content for a Next.js App Router page at route /{{ pagePath }}.
 
+Description: {{ pageDescription }}
+
+Requirements:
+- This is a Server Component (no "use client", no useState/useEffect)
+- Use shadcn/ui components for a polished, professional look
+- Import shadcn/ui components from '@/components/ui/<component-name>'
+- Use Tailwind CSS for layout (flex, grid, spacing, colors)
+- Create a well-structured page layout with:
+  - A header section with title and description
+  - Main content area with appropriate components
+  - Good visual hierarchy and spacing
+- Use semantic HTML (main, section, header, etc.)
+- Make it responsive (mobile-first with sm:, md:, lg: breakpoints)
+- Add placeholder data where needed (realistic-looking mock data)
+@if(pagePath.includes("["))
+- This is a dynamic route - accept and use route params
+@end
+
+Output ONLY the default export function body (the JSX return). Do NOT include imports or metadata - those are already defined above.
+The function signature is already provided. Output the function body starting with `return (`.
+  @end
+  @output({ typeHint: 'jsx-fragment' })
+A complete page component body with return statement, using shadcn/ui components.
+  @end
+  @example()
+  return (
+    <main className="container mx-auto py-10 space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">Overview of your application</p>
+        </div>
+        <Button>Create New</Button>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">$45,231.89</div>
+            <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+          <CardDescription>Your latest transactions and updates.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell>Example Item</TableCell>
+                <TableCell><Badge>Active</Badge></TableCell>
+                <TableCell>2024-01-15</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </main>
+  )
+  @end
+@end
+
+@if(pagePath.includes("["))
+@let(segments = pagePath.split("/"))
 type Params = {
-  @let(segments = pagePath.split("/"))
   @each(segment in segments)
   @if(segment.includes("[..."))
   {{ segment.replace("[...", "").replace("[[...", "").replace("]]", "").replace("]", "") }}: string[];
@@ -23,24 +109,10 @@ type Params = {
 
 export default async function Page({ params }: { params: Promise<Params> }) {
   const resolvedParams = await params;
-
-  return (
-    <main className="flex flex-1 flex-col items-center justify-center p-8">
-      <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-        {{ pageDescription }}
-      </h1>
-    </main>
-  );
+  {{ pageContent }}
 }
 @else
-
 export default function Page() {
-  return (
-    <main className="flex flex-1 flex-col items-center justify-center p-8">
-      <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-        {{ pageDescription }}
-      </h1>
-    </main>
-  );
+  {{ pageContent }}
 }
 @end

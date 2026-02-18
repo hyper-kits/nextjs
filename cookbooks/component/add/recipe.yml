@@ -9,12 +9,14 @@ variables:
     type: string
     description: Component name in PascalCase (e.g. "UserCard", "NavigationMenu")
     required: true
+    position: 0
     pattern: "^[A-Z][a-zA-Z0-9]*$"
 
   componentDescription:
     type: string
     description: Brief description of what this component does
-    required: true
+    position: 1
+    suggestion: ""
 
   dir:
     type: string

@@ -17,6 +17,7 @@ variables:
   pageDescription:
     type: string
     description: Brief description of what this page does
+    position: 1
     suggestion: ""
 
   withLayout:

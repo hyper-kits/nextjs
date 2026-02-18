@@ -6,6 +6,7 @@ variables:
   name:
     type: string
     required: true
+    position: 1
   description:
     type: string
     default: "A Next.js application"

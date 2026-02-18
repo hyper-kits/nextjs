@@ -2,26 +2,72 @@
 to: "{{ dir }}/{{ name }}.tsx"
 ---
 @if(client)
-  "use client";
+'use client'
 @end
 
-@if(withProps)
-  export interface {{ name }}Props {
-    // TODO: Define component props
-    children?: React.ReactNode;
-  }
-
-  export default function {{ name }}({ children }: {{ name }}Props) {
+@ai({ key: 'componentBody' })
+  @context()
+Component name: {{ name }}
+Description: {{ componentDescription }}
+@if(client)
+This is a Client Component (uses "use client" directive).
+Prefer hooks like useState, useEffect for interactivity.
 @else
-  export default function {{ name }}() {
+This is a Server Component.
+Prefer async/await data fetching and no client-side hooks.
+@end
+UI Library: shadcn/ui with Tailwind CSS
+  @end
+  @prompt()
+Generate a complete React component named `{{ name }}`.
+
+Description: {{ componentDescription }}
+
+Requirements:
+- Use TypeScript with proper type definitions
+- Use Tailwind CSS for styling (no CSS modules or styled-components)
+- Use shadcn/ui components where appropriate (Button, Card, Badge, etc.)
+- Import shadcn/ui components from '@/components/ui/<component-name>'
+@if(client)
+- This is a Client Component - use hooks as needed (useState, useEffect, etc.)
+@else
+- This is a Server Component - use async data fetching if needed, avoid client hooks
+@end
+- Include a Props interface if the component accepts props
+- Make it production-ready with proper accessibility (aria labels, semantic HTML)
+- Use responsive design patterns
+
+Output the COMPLETE module including all imports, the Props interface (if needed), the component function, and export.
+  @end
+  @output({ typeHint: 'typescript-code' })
+A complete React component module with imports, types, and implementation.
+  @end
+  @example()
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+
+export interface {{ name }}Props {
+  title: string
+  status: 'active' | 'inactive'
+  children?: React.ReactNode
+}
+
+export default function {{ name }}({ title, status, children }: {{ name }}Props) {
+  return (
+    <Card className="w-full">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+        <Badge variant={status === 'active' ? 'default' : 'secondary'}>
+          {status}
+        </Badge>
+      </CardHeader>
+      <CardContent>
+        {children}
+      </CardContent>
+    </Card>
+  )
+}
+  @end
 @end
 
-  return (
-    <div className="p-4">
-      <p className="text-zinc-600 dark:text-zinc-400">{{ name }} component</p>
-      @if(withProps)
-        {children}
-      @end
-    </div>
-  );
-}
+{{ componentBody }}

@@ -94,3 +94,7 @@ steps:
 
       - name: Copy window icon
         template: templates/public/window.svg.jig
+
+  - name: Install nextjs kit in the new project
+    tool: shell
+    command: "cd {{ name }} && hyper kit install hyper-kits/nextjs"

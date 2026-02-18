@@ -9,8 +9,9 @@ import { z } from 'zod'
 @ai({ key: 'zodSchema' })
   @context()
 Entity name: {{ modelName }}
-Fields:
-{{ fieldDescriptions }}
+@if(fieldDescriptions)
+Fields: {{ fieldDescriptions }}
+@end
 @if(relations)
 Relations: {{ relations }}
 @end
